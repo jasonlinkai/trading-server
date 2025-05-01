@@ -114,6 +114,14 @@ orderRouter.post('/', async (req: Request, res: Response) => {
     console.log(`Content-Type：${req.headers['content-type']}`);
     console.log(`請求參數：\n${formatResponse(req.body)}\n`);
     
+    // 檢查請求體是否為空
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.error(`[請求錯誤] 請求體為空或格式無效`);
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
+        error: 'Empty or invalid request body. Please provide order details in JSON format.' 
+      });
+    }
+    
     // 從請求體中提取訂單數據
     const orderData: OrderRequest = req.body;
 
