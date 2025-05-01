@@ -57,8 +57,8 @@ npm run start
   "now": "{{timenow}}",
   "action": "{{strategy.order.action}}",
   "symbol": "{{ticker}}",
-  "qty": {{strategy.order.contracts}},
-  "price": {{strategy.order.price}},
+  "qty": "{{strategy.order.contracts}}",
+  "price": "{{strategy.order.price}}",
   "take_profit": {
     "points": 900,
     "is_percentage": false
