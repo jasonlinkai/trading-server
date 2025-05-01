@@ -63,6 +63,10 @@ export class BitMEXService extends TradingService {
     this.symbolMappings.set('ETHUSD', 'ETHUSD');
     this.symbolMappings.set('XRPUSD', 'XRPUSD');
     
+    // 無分隔符格式 -> BitMEX 格式 (處理無分隔符的情況)
+    this.symbolMappings.set('BTCUSD', 'XBTUSD');
+    this.symbolMappings.set('ETHUSD', 'ETHUSD');
+    
     console.log(`[BitMEXService][INIT] 符號映射關係初始化完成: ${this.symbolMappings.size} 個映射 - 確保交易符號兼容性`);
   }
 
@@ -87,7 +91,10 @@ export class BitMEXService extends TradingService {
       // CCXT 返回的符號格式
       'BTC/USD:BTC': 0.5,  // CCXT 返回的 BTC/USD 格式
       'ETH/USD:ETH': 0.05, // CCXT 返回的 ETH/USD 格式
-      'XRP/USD:XRP': 0.0001 // CCXT 返回的 XRP/USD 格式
+      'XRP/USD:XRP': 0.0001, // CCXT 返回的 XRP/USD 格式
+      
+      // 無分隔符格式
+      'BTCUSD': 0.5        // 無分隔符的 BTC/USD 格式
     };
     
     console.log(`[BitMEXService][INIT] 硬編碼交易對信息已更新，包含 ${Object.keys(this.symbolMintickMap).length} 個交易對 - 確保系統在 API 失敗時仍能正常運作`);
@@ -127,6 +134,22 @@ export class BitMEXService extends TradingService {
       const bitmexStyle = xbtSymbol.replace('/', '');
       console.log(`[BitMEXService][SYMBOL] BTC -> XBT 轉換: ${symbol} -> ${bitmexStyle} - BitMEX 使用 XBT 代替 BTC`);
       return bitmexStyle;
+    }
+    
+    // 處理無分隔符的BTCUSD格式
+    if (symbol === 'BTCUSD') {
+      console.log(`[BitMEXService][SYMBOL] 無分隔符 BTCUSD 轉換為 XBTUSD - BitMEX 使用 XBT 代替 BTC`);
+      return 'XBTUSD';
+    }
+    
+    // 處理其他可能的無分隔符格式
+    if (symbol.includes('BTC') && !symbol.includes('/')) {
+      const btcIndex = symbol.indexOf('BTC');
+      if (btcIndex === 0) { // 如果BTC在前面
+        const newSymbol = 'XBT' + symbol.slice(3);
+        console.log(`[BitMEXService][SYMBOL] 無分隔符 BTC 轉換: ${symbol} -> ${newSymbol} - 處理無分隔符且BTC在前的情況`);
+        return newSymbol;
+      }
     }
     
     console.log(`[BitMEXService][SYMBOL] 交易對轉換結果: ${symbol} -> ${result} - 未找到特定映射，可能使用原始符號`);
