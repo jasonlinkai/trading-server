@@ -52,7 +52,11 @@ app.use(express.json()); // 解析請求體中的 JSON 數據
 // 請求頻率限制設置
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 時間窗口為 15 分鐘
-  max: 100                  // 每個 IP 在時間窗口內最多 100 個請求
+  max: 100,                 // 每個 IP 在時間窗口內最多 100 個請求
+  skip: (req, res) => {
+    // 跳過對 /api/format 和 /health 端點的限制
+    return req.path === '/api/format' || req.path === '/health';
+  }
 });
 app.use(limiter);           // 啟用請求頻率限制
 

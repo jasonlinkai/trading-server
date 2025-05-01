@@ -1,6 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 
 export const validateIp = (req: Request, res: Response, next: NextFunction) => {
+  // 允許 /api/format 端點繞過 IP 限制
+  if (req.path === '/api/format') {
+    console.log(`[IP BYPASS] 允許訪問 API 格式說明端點: ${req.ip || req.connection.remoteAddress}`);
+    return next();
+  }
+
+  // 允許健康檢查端點繞過 IP 限制
+  if (req.path === '/health') {
+    return next();
+  }
+
   const clientIp = req.ip || req.connection.remoteAddress;
   const allowedIps = process.env.ALLOWED_IPS?.split(',') || [];
 
