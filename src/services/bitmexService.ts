@@ -528,21 +528,46 @@ export class BitMEXService extends TradingService {
           return this.createEmptyPosition(bitmexSymbol);
         }
         
-        // 使用增強的符號匹配邏輯查找持倉
-        const position: any = positions.find((p: any) => {
+        // 使用增強的符號匹配邏輯查找有效持倉
+        let matchedPosition: any = null;
+        const nonZeroPositions = positions.filter((p: any) => {
           if (!p?.symbol) return false;
-          return this.matchSymbol(p.symbol, bitmexSymbol) || this.matchSymbol(p.symbol, symbol);
+          
+          // 檢查符號是否匹配
+          const symbolMatches = this.matchSymbol(p.symbol, bitmexSymbol) || this.matchSymbol(p.symbol, symbol);
+          
+          // 檢查是否為非零持倉
+          const size = p.contracts || p.contractSize || p.currentQty || p.positionAmt || 0;
+          const isNonZero = typeof size === 'number' && Math.abs(size) > 0;
+          
+          // 如果符號匹配且為非零持倉，記錄該持倉
+          if (symbolMatches && isNonZero) {
+            matchedPosition = p;
+            return true;
+          }
+          
+          return false;
         });
         
-        if (position) {
-          console.log(`[BitMEXService][POSITION] 找到匹配的持倉: ${position.symbol} - 使用靈活的符號匹配邏輯`);
-          // 移除冗長日誌，只保留必要的持倉大小信息
-          const positionSize = position.contracts || position.contractSize || position.notional || 0;
-          const positionLeverage = position.leverage || 0;
-          console.log(`[BitMEXService][POSITION] 持倉大小: ${positionSize} 合約，槓桿: ${positionLeverage}x`);
-          return position;
+        if (matchedPosition) {
+          console.log(`[BitMEXService][POSITION] 找到匹配的有效持倉: ${matchedPosition.symbol} - 用於阻止重複下單`);
+          // 提取關鍵持倉信息用於日誌
+          const positionSize = matchedPosition.contracts || matchedPosition.contractSize || 
+                              matchedPosition.currentQty || matchedPosition.positionAmt || 0;
+          const positionDirection = positionSize > 0 ? '多頭' : '空頭';
+          console.log(`[BitMEXService][POSITION] 持倉詳情: ${positionDirection}, 數量: ${Math.abs(positionSize)} 合約`);
+          
+          // 為消費端系統添加明確標記，表明這是有效持倉
+          matchedPosition._hasPosition = true;
+          matchedPosition._positionSize = positionSize;
+          matchedPosition._positionDirection = positionDirection;
+          
+          return matchedPosition;
+        } else if (nonZeroPositions.length > 0) {
+          console.log(`[BitMEXService][POSITION] 發現 ${nonZeroPositions.length} 個非零持倉，但與請求的交易對不匹配`);
+          return this.createEmptyPosition(bitmexSymbol);
         } else {
-          console.log(`[BitMEXService][POSITION] 在 ${positions.length} 個持倉中未找到匹配項 - 返回空持倉對象`);
+          console.log(`[BitMEXService][POSITION] 在 ${positions.length} 個持倉中未找到非零持倉 - 返回空持倉對象`);
           return this.createEmptyPosition(bitmexSymbol);
         }
       } catch (apiError) {
@@ -567,7 +592,8 @@ export class BitMEXService extends TradingService {
       entryPrice: 0,
       markPrice: 0,
       unrealisedPnl: 0,
-      timestamp: new Date().toISOString() 
+      timestamp: new Date().toISOString(),
+      _hasPosition: false  // 明確標記沒有持倉
     };
     
     if (error) {

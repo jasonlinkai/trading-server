@@ -19,13 +19,15 @@ export const TRADE_ACTIONS = {
 export const ERROR_MESSAGES = {
   MISSING_FIELDS: 'Missing required fields',
   INVALID_ACTION: 'Invalid action. Must be either "buy" or "sell"',
-  FAILED_TO_PROCESS: 'Failed to process order'
+  FAILED_TO_PROCESS: 'Failed to process order',
+  POSITION_EXISTS: 'Cannot create order: A position already exists for this trading pair. Please close the existing position first.'
 };
 
 // API 路徑常量
 export const API_PATHS = {
   ORDER: '/api/order',
-  HEALTH: '/health'
+  HEALTH: '/health',
+  POSITION: '/api/position'
 };
 
 // HTTP 狀態碼

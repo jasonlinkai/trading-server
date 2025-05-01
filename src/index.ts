@@ -32,6 +32,7 @@ app.use(validateIp);
 
 // 設置路由
 app.use('/api/order', orderRouter); // 將所有 /api/order 路徑的請求轉發到訂單路由處理器
+app.use('/api/position', orderRouter); // 註冊持倉查詢API，使用同一個路由處理器
 
 // 健康檢查端點，用於監控服務是否正常運行
 app.get('/health', (req, res) => {
