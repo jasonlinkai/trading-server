@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { TradingServiceFactory, ExchangeType } from '../services/tradingServiceFactory';
 import { formatResponse } from '../utils/formatting';
-import { OrderRequest } from '../interfaces/order';
+import { OrderRequest, OrderRequestData } from '../interfaces/order';
 import {
   EXCHANGE_TYPE,
   IS_TESTNET,
@@ -23,6 +23,20 @@ const tradingService = TradingServiceFactory.createService(
   API_SECRET || '',
   IS_TESTNET
 );
+
+/**
+ * 數據適配器：將OrderRequest中的字符串類型字段轉換為數字類型
+ * @param orderData 原始訂單數據（字符串格式）
+ * @returns {qty, price, limit_price} 解析後的數字值
+ */
+function adaptOrderRequest(orderData: OrderRequestData) {
+  return {
+    ...orderData,
+    qty: parseFloat(orderData.qty),
+    price: parseFloat(orderData.price),
+    limit_price: orderData.limit_price ? parseFloat(orderData.limit_price) : undefined
+  };
+}
 
 // 獲取持倉信息的API
 orderRouter.get('/', async (req: Request, res: Response) => {
@@ -123,7 +137,7 @@ orderRouter.post('/', async (req: Request, res: Response) => {
     }
     
     // 從請求體中提取訂單數據
-    const orderData: OrderRequest = req.body;
+    const orderData: OrderRequest = adaptOrderRequest(req.body);
 
     // 驗證必填字段
     if (!orderData.action || !orderData.symbol || !orderData.qty) {
