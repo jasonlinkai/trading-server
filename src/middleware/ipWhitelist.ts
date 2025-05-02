@@ -12,6 +12,14 @@ export const validateIp = (req: Request, res: Response, next: NextFunction) => {
     return next();
   }
 
+  // 允許交易所特定端點繞過 IP 限制
+  if (req.method === 'GET' && req.path === '/api/bitmex/position') {
+    return next();
+  }
+  if (req.method === 'GET' && req.path === '/api/binance/position') {
+    return next();
+  }
+
   const clientIp = req.ip || req.connection.remoteAddress;
   const allowedIps = process.env.ALLOWED_IPS?.split(',') || [];
   console.log(`[IP CHECK] 檢查 IP: ${clientIp} 是否在白名單中: ${allowedIps}`);
