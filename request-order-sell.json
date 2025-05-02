@@ -2,16 +2,16 @@
   "exchange": "bitmex",
   "interval": "1h",
   "now": "2023-05-26T04:00:00Z",
-  "action": "buy",
+  "action": "sell",
   "symbol": "BTC/USD",
-  "qty": 5,
-  "price": 35000,
+  "qty": "100",
+  "price": "96445",
   "take_profit": {
-    "points": 500,
+    "points": 3000,
     "is_percentage": false
   },
   "stop_loss": {
-    "points": 300,
+    "points": 1000,
     "is_percentage": false
   }
 } 

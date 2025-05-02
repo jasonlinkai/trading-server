@@ -41,3 +41,12 @@ export interface OrderRequest {
     is_percentage: boolean; // 是否為百分比
   };
 } 
+
+export interface OrderResult {
+  success: boolean;
+  order?: any;
+  takeProfitOrder?: any;
+  stopLossOrder?: any;
+  error?: string;
+  errorDetails?: any;
+}
