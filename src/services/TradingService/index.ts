@@ -1,6 +1,5 @@
 import * as ccxt from 'ccxt';
 import { ExchangeType, OrderType, TRADE_ACTIONS } from '../../enums';
-import { Position } from '../../routes/position';
 import { OrderResult, OrderRequest } from '../../interfaces/order';
 
 
@@ -13,7 +12,6 @@ export abstract class TradingService {
 
   protected readonly symbolMappingsForCCXT: Record<string, string> = {
     'BTCUSD': 'BTC/USD:BTC',
-    'ETHUSD': 'ETH/USD:ETH',
   };
   protected symbolMappingsForExchange: Record<string, string> = {
   };

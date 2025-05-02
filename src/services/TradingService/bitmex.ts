@@ -1,7 +1,6 @@
 import * as ccxt from 'ccxt';
 import { TradingService } from '.';
-import { ExchangeType, OrderType } from '../../enums';
-import { OrderRequest, OrderResult } from '../../interfaces/order';
+import { ExchangeType } from '../../enums';
 
 export class BitMEXService extends TradingService {
   constructor(exchangeType: ExchangeType, apiKey: string, apiSecret: string, isTestnet: boolean = false) {
@@ -25,7 +24,6 @@ export class BitMEXService extends TradingService {
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
       'BTCUSD': 'XBTUSD',
-      'ETHUSD': 'ETHUSD',
     };
   }
   checkQuantity(quantity: number): number {

@@ -77,65 +77,15 @@ app.get(API_PATHS.FORMAT, (req, res) => {
   res.json({
     description: '交易伺服器API格式說明',
     endpoints: {
-      // 舊的通用 API (向後兼容)
-      '/api/order': {
+      '/api/[exchange]/order': {
         method: 'POST',
         contentType: 'application/json 或 text/plain (包含JSON字符串)',
-        description: '創建新訂單 (舊版API，建議使用交易所特定路由)',
-        requestFormat: {
-          exchange: 'string (交易所名稱，例如 "bitmex")',
-          interval: 'string (時間週期)',
-          now: 'string (信號時間)',
-          action: 'string ("buy" 或 "sell")',
-          symbol: 'string (交易對，例如 "BTC/USD")',
-          qty: 'number (交易數量)',
-          price: 'number (交易價格)',
-          take_profit: {
-            points: 'number (止盈點數)',
-            is_percentage: 'boolean (是否百分比)'
-          },
-          stop_loss: {
-            points: 'number (止損點數)',
-            is_percentage: 'boolean (是否百分比)'
-          }
-        },
-        example: {
-          exchange: 'bitmex',
-          interval: '1h',
-          now: '2023-05-01T14:30:00Z',
-          action: 'buy',
-          symbol: 'BTCUSD',
-          qty: 100,
-          price: 35000,
-          take_profit: {
-            points: 500,
-            is_percentage: false
-          },
-          stop_loss: {
-            points: 300,
-            is_percentage: false
-          }
-        }
-      },
-      '/api/position': {
-        method: 'GET',
-        description: '獲取持倉信息 (舊版API，建議使用交易所特定路由)',
-        parameters: {
-          symbol: 'string (必填，交易對，例如 "BTC/USD")'
-        },
-        example: '/api/position?symbol=BTC/USD'
-      },
-      
-      // 新的交易所特定 API
-      '/api/binance/order': {
-        method: 'POST',
-        contentType: 'application/json 或 text/plain (包含JSON字符串)',
-        description: '創建 Binance 新訂單',
+        description: '創建 [exchange] 新訂單',
         requestFormat: {
           interval: 'string (時間週期)',
           now: 'string (信號時間)',
           action: 'string ("buy" 或 "sell")',
-          symbol: 'string (交易對，例如 "BTC/USDT")',
+          symbol: 'string (交易對，例如 "BTCUSD")',
           qty: 'number (交易數量)',
           price: 'number (交易價格)',
           take_profit: {
@@ -148,60 +98,20 @@ app.get(API_PATHS.FORMAT, (req, res) => {
           }
         }
       },
-      '/api/binance/position': {
+      '/api/[exchange]/position': {
         method: 'GET',
-        description: '獲取 Binance 持倉信息',
+        description: '獲取 [exchange] 持倉信息',
         parameters: {
-          symbol: 'string (必填，交易對，例如 "BTC/USDT")'
+          symbol: 'string (必填，交易對，例如 "BTCUSD")'
         },
-        example: '/api/binance/position?symbol=BTC/USDT'
+        example: '/api/[exchange]/position?symbol=BTCUSD'
       },
-      '/api/binance/position/close': {
+      '/api/[exchange]/position/close': {
         method: 'POST',
         contentType: 'application/json',
-        description: '關閉 Binance 指定交易對的持倉',
+        description: '關閉 [exchange] 指定交易對的持倉',
         requestFormat: {
-          symbol: 'string (必填，交易對，例如 "BTC/USDT")'
-        },
-        example: {
-          symbol: 'BTC/USDT'
-        }
-      },
-      '/api/bitmex/order': {
-        method: 'POST',
-        contentType: 'application/json 或 text/plain (包含JSON字符串)',
-        description: '創建 BitMEX 新訂單',
-        requestFormat: {
-          interval: 'string (時間週期)',
-          now: 'string (信號時間)',
-          action: 'string ("buy" 或 "sell")',
-          symbol: 'string (交易對，例如 "BTC/USD")',
-          qty: 'number (交易數量)',
-          price: 'number (交易價格)',
-          take_profit: {
-            points: 'number (止盈點數)',
-            is_percentage: 'boolean (是否百分比)'
-          },
-          stop_loss: {
-            points: 'number (止損點數)',
-            is_percentage: 'boolean (是否百分比)'
-          }
-        }
-      },
-      '/api/bitmex/position': {
-        method: 'GET',
-        description: '獲取 BitMEX 持倉信息',
-        parameters: {
-          symbol: 'string (必填，交易對，例如 "BTC/USD")'
-        },
-        example: '/api/bitmex/position?symbol=BTC/USD'
-      },
-      '/api/bitmex/position/close': {
-        method: 'POST',
-        contentType: 'application/json',
-        description: '關閉 BitMEX 指定交易對的持倉',
-        requestFormat: {
-          symbol: 'string (必填，交易對，例如 "BTC/USD")'
+          symbol: 'string (必填，交易對，例如 "BTCUSD")'
         },
         example: {
           symbol: 'BTCUSD'

@@ -45,7 +45,7 @@ npm run start
 
 ## API 端點
 
-### POST /api/order
+### POST /api/[exchange]/order
 
 接收訂單請求的端點。
 
