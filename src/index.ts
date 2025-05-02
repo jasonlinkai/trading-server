@@ -15,6 +15,9 @@ const app = express();
 // 設定服務器監聽端口，優先使用環境變數中的 PORT，若未設定則使用 3000
 const port = process.env.PORT || 3000;
 
+// 設置信任代理，允許反向代理
+app.set('trust proxy', true);
+
 // 中間件設置
 app.use(helmet());       // 啟用 Helmet 安全中間件，防止常見 Web 漏洞
 app.use(cors());         // 啟用 CORS，允許跨域請求
