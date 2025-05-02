@@ -6,7 +6,7 @@ import { BINANCE_API_KEY, BINANCE_API_SECRET, BITMEX_API_KEY, BITMEX_API_SECRET,
 // Common trading symbols to check
 // This can be extended or made configurable
 const COMMON_SYMBOLS = [
-  'BTC/USD',
+  'BTCUSD',
 ];
 
 /**

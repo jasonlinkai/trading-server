@@ -12,8 +12,8 @@ export abstract class TradingService {
   protected exchangeType: ExchangeType;
 
   protected readonly symbolMappingsForCCXT: Record<string, string> = {
-    'BTC/USD': 'BTC/USD:BTC',
-    'ETH/USD': 'ETH/USD:ETH',
+    'BTCUSD': 'BTC/USD:BTC',
+    'ETHUSD': 'ETH/USD:ETH',
   };
   protected symbolMappingsForExchange: Record<string, string> = {
   };

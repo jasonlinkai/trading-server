@@ -105,7 +105,7 @@ app.get(API_PATHS.FORMAT, (req, res) => {
           interval: '1h',
           now: '2023-05-01T14:30:00Z',
           action: 'buy',
-          symbol: 'BTC/USD',
+          symbol: 'BTCUSD',
           qty: 100,
           price: 35000,
           take_profit: {
@@ -205,7 +205,7 @@ app.get(API_PATHS.FORMAT, (req, res) => {
           symbol: 'string (必填，交易對，例如 "BTC/USD")'
         },
         example: {
-          symbol: 'BTC/USD'
+          symbol: 'BTCUSD'
         }
       }
     }

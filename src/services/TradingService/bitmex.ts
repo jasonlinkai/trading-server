@@ -24,8 +24,8 @@ export class BitMEXService extends TradingService {
   }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
-      'BTC/USD': 'XBTUSD',
-      'ETH/USD': 'ETHUSD',
+      'BTCUSD': 'XBTUSD',
+      'ETHUSD': 'ETHUSD',
     };
   }
   checkQuantity(quantity: number): number {

@@ -3,7 +3,7 @@
   "interval": "1h",
   "now": "2023-05-26T04:00:00Z",
   "action": "sell",
-  "symbol": "BTC/USD",
+  "symbol": "BTCUSD",
   "qty": "100",
   "price": "96445",
   "take_profit": {

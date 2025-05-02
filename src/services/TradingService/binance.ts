@@ -25,8 +25,8 @@ export class BinanceService extends TradingService {
   }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
-      'BTC/USD': 'BTC/USD',
-      'ETH/USD': 'ETH/USD',
+      'BTCUSD': 'BTC/USD',
+      'ETHUSD': 'ETH/USD',
     };
   }
   checkQuantity(quantity: number): number {
