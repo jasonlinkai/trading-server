@@ -70,7 +70,7 @@ app.use(limiter);           // 啟用請求頻率限制
 app.use(validateIp);
 
 
-app.use(API_PATHS.BINANCE_ROUTER, registerOrderRoute(ExchangeType.BINANCE, BINANCE_API_KEY, BINANCE_API_SECRET, IS_TESTNET)); // 註冊 Binance 特定的 API 路由
+// app.use(API_PATHS.BINANCE_ROUTER, registerOrderRoute(ExchangeType.BINANCE, BINANCE_API_KEY, BINANCE_API_SECRET, IS_TESTNET)); // 註冊 Binance 特定的 API 路由
 app.use(API_PATHS.BITMEX_ROUTER, registerOrderRoute(ExchangeType.BITMEX, BITMEX_API_KEY, BITMEX_API_SECRET, IS_TESTNET)); // 註冊 BitMEX 特定的 API 路由
 
 // API 格式說明終端點

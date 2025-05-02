@@ -145,7 +145,7 @@ export abstract class TradingService {
     isTakeProfit: boolean,
     mintick: number = 1
   ): number {
-    console.log(`[${this.exchangeType}][CALC] 開始計算${isTakeProfit ? '止盈' : '止損'}價格 - 入場價: ${entryPrice}, 點數: ${points}, 模式: ${isPercentage ? '百分比' : '點數'}, Mintick: ${mintick}`);
+    console.log(`[${this.exchangeType}][CALC] 開始計算${isTakeProfit ? 'HP' : 'LP'}價格 - 入場價: ${entryPrice}, 點數: ${points}, 模式: ${isPercentage ? '百分比' : '點數'}, Mintick: ${mintick}`);
 
     let result: number;
     if (isPercentage) {

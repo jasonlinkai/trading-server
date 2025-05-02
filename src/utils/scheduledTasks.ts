@@ -22,7 +22,7 @@ export function initScheduledTasks() {
     
     try {
       // Check positions and clear orders for Binance
-      await checkPositionsAndClearOrders(ExchangeType.BINANCE, BINANCE_API_KEY, BINANCE_API_SECRET, IS_TESTNET);
+      // await checkPositionsAndClearOrders(ExchangeType.BINANCE, BINANCE_API_KEY, BINANCE_API_SECRET, IS_TESTNET);
       
       // Check positions and clear orders for BitMEX
       await checkPositionsAndClearOrders(ExchangeType.BITMEX, BITMEX_API_KEY, BITMEX_API_SECRET, IS_TESTNET);
