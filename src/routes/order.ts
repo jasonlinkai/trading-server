@@ -164,6 +164,18 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
         });
       }
 
+      // If no position exists, cancel any existing take-profit and stop-loss orders first
+      if (!position) {
+        console.log(`[訂單處理] 未檢測到持倉，正在關閉可能存在的止盈止損訂單...`);
+        try {
+          await tradingService.cancelAllOrders(orderData.symbol);
+          console.log(`[訂單處理] 已關閉交易對 ${orderData.symbol} 的所有訂單`);
+        } catch (error) {
+          console.error(`[訂單處理] 關閉訂單時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
+          // Continue despite errors in canceling orders
+        }
+      }
+
       console.log(`[持倉檢查] 未檢測到已有持倉，允許創建新訂單`);
       console.log(`\n[訂單處理] 開始處理訂單...`);
 

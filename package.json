@@ -10,12 +10,14 @@
     "deploy": "gcloud functions deploy tradingApi --runtime nodejs18 --trigger-http --allow-unauthenticated"
   },
   "dependencies": {
+    "@types/node-cron": "^3.0.11",
     "ccxt": "^4.1.87",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "helmet": "^7.1.0",
+    "node-cron": "^3.0.3",
     "winston": "^3.17.0"
   },
   "devDependencies": {

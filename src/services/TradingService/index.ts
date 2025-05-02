@@ -444,4 +444,27 @@ export abstract class TradingService {
     }
   }
   abstract checkQuantity(quantity: number): number;
+
+  /**
+   * 取消指定交易對的所有訂單
+   * @param symbol 交易對符號
+   * @returns 取消結果
+   */
+  async cancelAllOrders(symbol: string): Promise<boolean> {
+    console.log(`[${this.exchangeType}][CANCEL] 開始取消 ${symbol} 的所有訂單 - 清理潛在的止盈止損訂單`);
+    try {
+      if (!this.exchange) {
+        console.error(`[${this.exchangeType}][ERROR] 交易所實例未初始化，無法取消訂單 - 可能是配置問題或初始化失敗`);
+        throw new Error('Exchange not initialized');
+      }
+      
+      const exchangeSymbol = this.convertSymbolForExchange(symbol);
+      await this.exchange.cancelAllOrders(exchangeSymbol);
+      console.log(`[${this.exchangeType}][CANCEL] 成功取消 ${symbol} 的所有訂單`);
+      return true;
+    } catch (error: any) {
+      console.error(`[${this.exchangeType}][ERROR] 取消訂單失敗: ${error.message} - 可能是網絡問題或無訂單可取消`);
+      throw error;
+    }
+  }
 } 
