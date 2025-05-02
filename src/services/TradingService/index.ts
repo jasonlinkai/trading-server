@@ -338,34 +338,34 @@ export abstract class TradingService {
 
       // 使用訂單價格計算止盈止損
       const entryPrice = orderData.price;
-      console.log(`[${this.exchangeType}][PRICE] 使用入場價格: ${entryPrice} 計算止盈止損 - 基準價格用於計算觸發價格`);
+      console.log(`[${this.exchangeType}] 使用入場價格: ${entryPrice} 計算HP、LP`);
 
       // 計算止盈價格
-      console.log(`[${this.exchangeType}][TP] 計算止盈價格: 點數=${orderData.take_profit.points}, 模式=${orderData.take_profit.is_percentage ? '百分比' : '點數'}`);
-      const takeProfitPrice = this.calculatePriceByPoints(
+      console.log(`[${this.exchangeType}] 計算HP價格: 點數=${orderData.take_profit.points}, 模式=${orderData.take_profit.is_percentage ? '百分比' : '點數'}`);
+      const hightPrice = this.calculatePriceByPoints(
         entryPrice,
-        orderData.take_profit.points,
-        orderData.take_profit.is_percentage,
+        orderData.action.toLowerCase() === 'buy' ? orderData.take_profit.points : orderData.stop_loss.points,
+        orderData.action.toLowerCase() === 'buy' ? orderData.take_profit.is_percentage : orderData.stop_loss.is_percentage,
         true,
         mintick
       );
 
       // 計算止損價格
-      console.log(`[${this.exchangeType}][SL] 計算止損價格: 點數=${orderData.stop_loss.points}, 模式=${orderData.stop_loss.is_percentage ? '百分比' : '點數'}`);
-      const stopLossPrice = this.calculatePriceByPoints(
+      console.log(`[${this.exchangeType}] 計算LP價格: 點數=${orderData.stop_loss.points}, 模式=${orderData.stop_loss.is_percentage ? '百分比' : '點數'}`);
+      const lowPrice = this.calculatePriceByPoints(
         entryPrice,
-        orderData.stop_loss.points,
-        orderData.stop_loss.is_percentage,
+        orderData.action.toLowerCase() === 'buy' ? orderData.stop_loss.points : orderData.take_profit.points,
+        orderData.action.toLowerCase() === 'buy' ? orderData.stop_loss.is_percentage : orderData.take_profit.is_percentage,
         false,
         mintick
       );
 
       // 如果API返回的訂單數量與請求的不同，使用API返回的數量
       const executedQuantity = order.info && order.info.orderQty ? Number(order.info.orderQty) : quantity;
-      console.log(`[${this.exchangeType}][INFO] 使用實際執行數量 ${executedQuantity} 創建止盈止損訂單 - 確保數量一致性`);
+      console.log(`[${this.exchangeType}] 使用實際執行數量 ${executedQuantity} 創建高低價訂單`);
 
       // 創建止盈訂單
-      console.log(`[${this.exchangeType}][TP] 創建止盈訂單: ${executedQuantity} ${exchangeSymbol} @ ${takeProfitPrice} - 為實現利潤目標`);
+      console.log(`[${this.exchangeType}] 創建HP訂單: ${executedQuantity} ${exchangeSymbol} @ ${hightPrice}`);
 
       let takeProfitOrder;
       try {
@@ -376,17 +376,17 @@ export abstract class TradingService {
           executedQuantity,
           undefined,
           {
-            stopPx: takeProfitPrice,
+            stopPx: hightPrice,
           }
         );
-        console.log(`[${this.exchangeType}][TP] 止盈訂單創建成功: ID=${takeProfitOrder.id}, 狀態=${takeProfitOrder.status} - 等待價格達到 ${takeProfitPrice} 觸發`);
+        console.log(`[${this.exchangeType}] 創建HP訂單成功: ID=${takeProfitOrder.id}, 狀態=${takeProfitOrder.status} - 等待價格達到 ${hightPrice} 觸發`);
         result.takeProfitOrder = takeProfitOrder;
       } catch (tpError: any) {
-        console.error(`[${this.exchangeType}][ERROR] 止盈訂單創建失敗: ${tpError instanceof Error ? tpError.message : '未知錯誤'} - 繼續處理止損訂單`);
+        console.error(`[${this.exchangeType}] 創建HP訂單失敗: ${tpError instanceof Error ? tpError.message : '未知錯誤'}`);
       }
 
       // 創建止損訂單
-      console.log(`[${this.exchangeType}][SL] 創建止損訂單: ${executedQuantity} ${exchangeSymbol} @ ${stopLossPrice} - 為控制潛在損失`);
+      console.log(`[${this.exchangeType}] 創建LP訂單: ${executedQuantity} ${exchangeSymbol} @ ${lowPrice}`);
 
       let stopLossOrder;
       try {
@@ -397,20 +397,20 @@ export abstract class TradingService {
           executedQuantity,
           undefined,
           {
-            stopPx: stopLossPrice,
+            stopPx: lowPrice,
           }
         );
-        console.log(`[${this.exchangeType}][SL] 止損訂單創建成功: ID=${stopLossOrder.id}, 狀態=${stopLossOrder.status} - 等待價格達到 ${stopLossPrice} 觸發`);
+        console.log(`[${this.exchangeType}] 創建LP訂單成功: ID=${stopLossOrder.id}, 狀態=${stopLossOrder.status} - 等待價格達到 ${lowPrice} 觸發`);
         result.stopLossOrder = stopLossOrder;
       } catch (slError: any) {
-        console.error(`[${this.exchangeType}][ERROR] 止損訂單創建失敗: ${slError instanceof Error ? slError.message : '未知錯誤'} - 完成訂單處理但缺少止損保護`);
+        console.error(`[${this.exchangeType}] 創建LP訂單失敗: ${slError instanceof Error ? slError.message : '未知錯誤'}`);
       }
 
       // 總結訂單處理狀態
       console.log(`[${this.exchangeType}][SUCCESS] 訂單處理完成:
         - 主訂單: ${result.order ? '成功' : '失敗'}
-        - 止盈訂單: ${result.takeProfitOrder ? '成功' : '失敗或未創建'}
-        - 止損訂單: ${result.stopLossOrder ? '成功' : '失敗或未創建'}`);
+        - HP訂單: ${result.takeProfitOrder ? '成功' : '失敗或未創建'}
+        - LP訂單: ${result.stopLossOrder ? '成功' : '失敗或未創建'}`);
       console.log(`========== [${this.exchangeType}][ORDER] 訂單處理完成 ==========\n`);
 
       return result;

@@ -16,7 +16,7 @@ export function initScheduledTasks() {
   console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
 
   // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
-  cron.schedule('4,8,12,16,20,24,28,32,36,40,44,48,52,56 * * * *', async () => {
+  cron.schedule('0,4,8,12,16,20,24,28,32,36,40,44,48,52,56 * * * *', async () => {
     const currentTime = new Date();
     console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
     
