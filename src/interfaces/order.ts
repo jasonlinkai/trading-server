@@ -1,3 +1,5 @@
+import { TRADE_ACTIONS, ExchangeType, SymbolType } from "../enums";
+
 /**
  * 交易訂單的請求接口定義，描述從客戶端接收的訂單數據結構
  */
@@ -24,11 +26,11 @@ export interface OrderRequestData {
  * adapter 適配器之後的OrderRequestData
  */
 export interface OrderRequest {
-  exchange: string;      // 交易所名稱
+  exchange: ExchangeType;      // 交易所名稱
   interval: string;      // 交易時間週期
   now: string;           // 訊號時間
-  action: string;        // 交易動作（buy/sell）
-  symbol: string;        // 交易對符號
+  action: TRADE_ACTIONS;        // 交易動作（buy/sell）
+  symbol: SymbolType;        // 交易對符號
   qty: number;           // 交易數量 (接收为字符串)
   price: number;         // 交易價格 (接收为字符串)
   limit_price?: number;  // 可選的限價 (接收为字符串)

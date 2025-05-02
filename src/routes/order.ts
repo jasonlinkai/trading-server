@@ -1,3 +1,4 @@
+import * as cron from 'node-cron';
 import { Router, Request, Response } from 'express';
 import { TradingServiceFactory } from '../factories/TradingServiceFactory';
 import { formatResponse } from '../utils/formatting';
@@ -5,7 +6,7 @@ import { OrderRequest, OrderRequestData } from '../interfaces/order';
 import {
   IS_TESTNET,
 } from '../constants';
-import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS } from '../enums';
+import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS, SymbolType } from '../enums';
 
 /**
  * Data adapter: Convert string fields in OrderRequest to number types
@@ -13,6 +14,9 @@ import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS } from '../enu
 function adaptOrderRequest(orderData: OrderRequestData) {
   return {
     ...orderData,
+    exchange: orderData.exchange.toLowerCase() as ExchangeType,
+    symbol: orderData.symbol as SymbolType,
+    action: orderData.action.toLowerCase() as TRADE_ACTIONS,
     qty: parseFloat(orderData.qty),
     price: parseFloat(orderData.price),
     limit_price: orderData.limit_price ? parseFloat(orderData.limit_price) : undefined
@@ -231,6 +235,32 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
       });
     }
   });
+
+  function initScheduledTasks() {
+    console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
+  
+    // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
+    cron.schedule('4,9,14,19,24,29,34,39,44,49,54,59 * * * *', async () => {
+      const currentTime = new Date();
+      console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
+      
+      try {
+        // Check positions and clear orders
+        await tradingService.checkPositionsAndClearOrders(Object.values(SymbolType));
+        
+        console.log(`[排程] 定時任務執行完成 - ${new Date().toISOString()}`);
+      } catch (error) {
+        console.error('[排程][錯誤] 執行定時任務時發生錯誤:', error);
+      }
+    }, {
+      scheduled: true,
+      timezone: "Asia/Taipei" // Adjust timezone as needed
+    });
+  
+    console.log('[排程] 已成功設置排程任務');
+  }
+
+  initScheduledTasks();
 
   return router;
 }

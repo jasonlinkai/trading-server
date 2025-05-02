@@ -8,7 +8,6 @@ import { validateIp } from './middleware/ipWhitelist'; // 導入 IP 白名單驗
 import { registerOrderRoute } from './routes/order'; // 導入 Binance 路由
 import { API_PATHS, ExchangeType } from './enums';
 import { BINANCE_API_KEY, BITMEX_API_KEY, BITMEX_API_SECRET, BINANCE_API_SECRET, IS_TESTNET } from './constants';
-import { initScheduledTasks } from './utils/scheduledTasks'; // 導入排程任務
 
 // 載入環境變數（從 .env 文件）
 dotenv.config();
@@ -226,8 +225,4 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 // 啟動服務器
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`); // 服務器成功啟動後的日誌信息
-  
-  // 初始化排程任務
-  initScheduledTasks();
-  console.log(`Scheduled tasks initialized`);
 }); 

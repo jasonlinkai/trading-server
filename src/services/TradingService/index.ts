@@ -1,5 +1,5 @@
 import * as ccxt from 'ccxt';
-import { ExchangeType, OrderType } from '../../enums';
+import { ExchangeType, OrderType, TRADE_ACTIONS } from '../../enums';
 import { Position } from '../../routes/position';
 import { OrderResult, OrderRequest } from '../../interfaces/order';
 
@@ -21,7 +21,7 @@ export abstract class TradingService {
   };
 
   protected marketDataCache: ccxt.Market[] = [];
-  protected readonly cacheExpiryTime: number = 5 * 60 * 1000; // 5分鐘快取過期
+  protected readonly cacheExpiryTime: number = 10 * 60 * 1000; // 10分鐘快取過期
   protected lastCacheTime: number = 0;
 
   constructor(exchangeType: ExchangeType, apiKey: string, apiSecret: string, isTestnet: boolean = false) {
@@ -344,8 +344,8 @@ export abstract class TradingService {
       console.log(`[${this.exchangeType}] 計算HP價格: 點數=${orderData.take_profit.points}, 模式=${orderData.take_profit.is_percentage ? '百分比' : '點數'}`);
       const hightPrice = this.calculatePriceByPoints(
         entryPrice,
-        orderData.action.toLowerCase() === 'buy' ? orderData.take_profit.points : orderData.stop_loss.points,
-        orderData.action.toLowerCase() === 'buy' ? orderData.take_profit.is_percentage : orderData.stop_loss.is_percentage,
+        orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? orderData.take_profit.points : orderData.stop_loss.points,
+        orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? orderData.take_profit.is_percentage : orderData.stop_loss.is_percentage,
         true,
         mintick
       );
@@ -354,8 +354,8 @@ export abstract class TradingService {
       console.log(`[${this.exchangeType}] 計算LP價格: 點數=${orderData.stop_loss.points}, 模式=${orderData.stop_loss.is_percentage ? '百分比' : '點數'}`);
       const lowPrice = this.calculatePriceByPoints(
         entryPrice,
-        orderData.action.toLowerCase() === 'buy' ? orderData.stop_loss.points : orderData.take_profit.points,
-        orderData.action.toLowerCase() === 'buy' ? orderData.stop_loss.is_percentage : orderData.take_profit.is_percentage,
+        orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? orderData.stop_loss.points : orderData.take_profit.points,
+        orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? orderData.stop_loss.is_percentage : orderData.take_profit.is_percentage,
         false,
         mintick
       );
@@ -371,8 +371,8 @@ export abstract class TradingService {
       try {
         takeProfitOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === 'buy' ? OrderType.MARKET_IF_TOUCHED : OrderType.STOP,
-          orderData.action.toLowerCase() === 'buy' ? 'sell' : 'buy',
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.MARKET_IF_TOUCHED : OrderType.STOP,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           undefined,
           {
@@ -392,8 +392,8 @@ export abstract class TradingService {
       try {
         stopLossOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === 'buy' ? OrderType.STOP : OrderType.MARKET_IF_TOUCHED,
-          orderData.action.toLowerCase() === 'buy' ? 'sell' : 'buy',
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.STOP : OrderType.MARKET_IF_TOUCHED,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           undefined,
           {
@@ -467,4 +467,35 @@ export abstract class TradingService {
       throw error;
     }
   }
+
+  async checkPositionsAndClearOrders(
+    symbols: string[],
+  ) {
+    console.log(`[排程][${this.exchangeType}] 開始檢查持倉和清理訂單`);
+    
+    // Check each symbol
+    for (const symbol of symbols) {
+      try {
+        console.log(`[排程][${this.exchangeType}] 檢查交易對 ${symbol}`);
+        
+        // Fetch position for this symbol
+        const position = await this.fetchPosition(symbol);
+        
+        if (!position) {
+          console.log(`[排程][${this.exchangeType}] 交易對 ${symbol} 無持倉，檢查並清理訂單`);
+          
+          // No position exists, cancel all orders for this symbol
+          await this.cancelAllOrders(symbol);
+          console.log(`[排程][${this.exchangeType}] 已清理交易對 ${symbol} 的所有訂單`);
+        } else {
+          console.log(`[排程][${this.exchangeType}] 交易對 ${symbol} 有持倉，保留所有訂單`);
+        }
+      } catch (error) {
+        console.error(`[排程][${this.exchangeType}][錯誤] 處理交易對 ${symbol} 時發生錯誤:`, error);
+        // Continue with next symbol despite error
+      }
+    }
+    
+    console.log(`[排程][${this.exchangeType}] 檢查持倉和清理訂單完成`);
+  } 
 } 
