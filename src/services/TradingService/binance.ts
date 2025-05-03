@@ -20,11 +20,12 @@ export class BinanceService extends TradingService {
     }
 
     this.fetchMarketData();
-    console.log(`[${this.exchangeType}][subclass][INIT] 服務初始化完成，交易所基礎 URL: ${this.exchange.urls.api} - 已建立交易所連接`);
+    console.log(`[${this.exchangeType}][subclass][INIT] 服務初始化完成，交易所基礎 URL: ${JSON.stringify(this.exchange.urls)} - 已建立交易所連接`);
   }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
       'BTCUSD': 'BTC/USD',
+      'BTCUSDT': 'BTC/USDT'
     };
   }
   checkQuantity(quantity: number): number {

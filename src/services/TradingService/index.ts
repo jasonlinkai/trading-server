@@ -12,6 +12,7 @@ export abstract class TradingService {
 
   protected readonly symbolMappingsForCCXT: Record<string, string> = {
     'BTCUSD': 'BTC/USD:BTC',
+    'BTCUSDT': 'BTC/USDT:USDT'
   };
   protected symbolMappingsForExchange: Record<string, string> = {
   };
@@ -267,7 +268,7 @@ export abstract class TradingService {
         console.error(`[${this.exchangeType}][ERROR] 交易所實例未初始化，無法下單`);
         throw new Error('Exchange not initialized');
       }
-
+      const orderUUID = `order-${orderData.symbol}-001`;
       const symbol = orderData.symbol;
       const exchangeSymbol = this.convertSymbolForExchange(symbol);
 
@@ -297,6 +298,15 @@ export abstract class TradingService {
 
       let order;
       try {
+        console.log(`[${this.exchangeType}][MAIN] 設置槓桿: ${exchangeSymbol}`);
+        const response = await this.exchange.setLeverage(orderData.leverage, exchangeSymbol);
+        console.log(`[${this.exchangeType}][MAIN] 設置槓桿成功: ${JSON.stringify(response)}`);
+      } catch (error: any) {
+        console.error(`[${this.exchangeType}][ERROR] 設置槓桿失敗: ${error.message} - 可能是網絡問題或參數無效`);
+        throw error;
+      }
+      try {
+
         order = await this.exchange.createOrder(
           exchangeSymbol,
           orderType,
@@ -304,7 +314,7 @@ export abstract class TradingService {
           quantity,
           orderData.limit_price,
           {
-            clOrdID: 'order-main-001',
+            clOrdID: `main-${orderUUID}`,
           }
         );
         console.log(`[${this.exchangeType}][MAIN] 主訂單創建成功: ${JSON.stringify(order)}`);
@@ -377,8 +387,8 @@ export abstract class TradingService {
           executedQuantity,
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? hightPrice : undefined,
           {
-            clOrdID: 'order-hp-001',
-            clOrdLinkID: 'order-001',
+            clOrdID: `hp-${orderUUID}`,
+            clOrdLinkID: `cl-${orderUUID}`,
             stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : hightPrice,
             execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly' : 'ReduceOnly,LastPrice',
             contingencyType: 'OneCancelsTheOther',
@@ -402,8 +412,8 @@ export abstract class TradingService {
           executedQuantity,
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : lowPrice,
           {
-            clOrdID: 'order-lp-001',
-            clOrdLinkID: 'order-001',
+            clOrdID: `lp-${orderUUID}`,
+            clOrdLinkID: `cl-${orderUUID}`,
             stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? lowPrice : undefined,
             execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly,LastPrice' : 'ReduceOnly',
             contingencyType: 'OneCancelsTheOther',

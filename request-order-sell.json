@@ -3,9 +3,10 @@
   "interval": "1h",
   "now": "2023-05-26T04:00:00Z",
   "action": "sell",
-  "symbol": "BTCUSD",
+  "symbol": "BTCUSDT",
   "qty": "100",
-  "price": "96417",
+  "price": "96178",
+  "leverage": 1,
   "take_profit": {
     "points": 3000,
     "is_percentage": false

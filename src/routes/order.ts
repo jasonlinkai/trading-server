@@ -20,6 +20,7 @@ function adaptOrderRequest(orderData: OrderRequestData) {
     qty: parseFloat(orderData.qty),
     price: parseFloat(orderData.price),
     limit_price: orderData.limit_price ? parseFloat(orderData.limit_price) : undefined,
+    leverage: orderData.leverage || 1,
     take_profit: {
       points: orderData.take_profit.points,
       is_percentage: orderData.take_profit.is_percentage || false

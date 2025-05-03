@@ -1,5 +1,6 @@
 export enum SymbolType {
   'BTCUSD' = 'BTCUSD',
+  'BTCUSDT' = 'BTCUSDT'
 }
 
 export enum ExchangeType {

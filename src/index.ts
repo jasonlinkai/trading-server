@@ -85,9 +85,10 @@ app.get(API_PATHS.FORMAT, (req, res) => {
           interval: 'string (時間週期)',
           now: 'string (信號時間)',
           action: 'string ("buy" 或 "sell")',
-          symbol: 'string (交易對，例如 "BTCUSD")',
+          symbol: 'string (交易對，例如 "BTCUSD、BTCUSDT")',
           qty: 'number (交易數量)',
           price: 'number (交易價格)',
+          leverage: 'number (槓桿倍數)',
           take_profit: {
             points: 'number (止盈點數)',
             is_percentage: 'boolean (是否百分比)'

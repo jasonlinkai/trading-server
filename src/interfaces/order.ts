@@ -12,6 +12,7 @@ export interface OrderRequestData {
   qty: string;           // 交易數量 (接收为字符串)
   price: string;         // 交易價格 (接收为字符串)
   limit_price?: string;  // 可選的限價 (接收为字符串)
+  leverage?: number;     // 槓桿倍數
   take_profit: {         // 止盈設置
     points: number;      // 止盈點數
     is_percentage: boolean; // 是否為百分比
@@ -34,6 +35,7 @@ export interface OrderRequest {
   qty: number;           // 交易數量 (接收为字符串)
   price: number;         // 交易價格 (接收为字符串)
   limit_price?: number;  // 可選的限價 (接收为字符串)
+  leverage: number;     // 槓桿倍數
   take_profit: {         // 止盈設置
     points: number;      // 止盈點數
     is_percentage: boolean; // 是否為百分比
