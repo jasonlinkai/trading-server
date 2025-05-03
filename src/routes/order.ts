@@ -236,31 +236,31 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
     }
   });
 
-  function initScheduledTasks() {
-    console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
+  // function initScheduledTasks() {
+  //   console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
   
-    // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
-    cron.schedule('4,9,14,19,24,29,34,39,44,49,54,59 * * * *', async () => {
-      const currentTime = new Date();
-      console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
+  //   // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
+  //   cron.schedule('4,9,14,19,24,29,34,39,44,49,54,59 * * * *', async () => {
+  //     const currentTime = new Date();
+  //     console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
       
-      try {
-        // Check positions and clear orders
-        await tradingService.checkPositionsAndClearOrders(Object.values(SymbolType));
+  //     try {
+  //       // Check positions and clear orders
+  //       await tradingService.checkPositionsAndClearOrders(Object.values(SymbolType));
         
-        console.log(`[排程] 定時任務執行完成 - ${new Date().toISOString()}`);
-      } catch (error) {
-        console.error('[排程][錯誤] 執行定時任務時發生錯誤:', error);
-      }
-    }, {
-      scheduled: true,
-      timezone: "Asia/Taipei" // Adjust timezone as needed
-    });
+  //       console.log(`[排程] 定時任務執行完成 - ${new Date().toISOString()}`);
+  //     } catch (error) {
+  //       console.error('[排程][錯誤] 執行定時任務時發生錯誤:', error);
+  //     }
+  //   }, {
+  //     scheduled: true,
+  //     timezone: "Asia/Taipei" // Adjust timezone as needed
+  //   });
   
-    console.log('[排程] 已成功設置排程任務');
-  }
+  //   console.log('[排程] 已成功設置排程任務');
+  // }
 
-  initScheduledTasks();
+  // initScheduledTasks();
 
   return router;
 }

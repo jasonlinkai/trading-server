@@ -374,7 +374,11 @@ export abstract class TradingService {
           executedQuantity,
           undefined,
           {
+            clOrdID: 'order-hp-001',
+            clOrdLinkID: 'order-lp-001',
             stopPx: hightPrice,
+            execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly' : 'ReduceOnly,LastPrice',
+            contingencyType: 'OneCancelsTheOther',
           }
         );
         console.log(`[${this.exchangeType}] 創建HP訂單成功: ID=${takeProfitOrder.id}, 狀態=${takeProfitOrder.status} - 等待價格達到 ${hightPrice} 觸發`);
@@ -395,7 +399,11 @@ export abstract class TradingService {
           executedQuantity,
           undefined,
           {
+            clOrdID: 'order-lp-001',
+            clOrdLinkID: 'order-hp-001',
             stopPx: lowPrice,
+            execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly,LastPrice' : 'ReduceOnly',
+            contingencyType: 'OneCancelsTheOther',
           }
         );
         console.log(`[${this.exchangeType}] 創建LP訂單成功: ID=${stopLossOrder.id}, 狀態=${stopLossOrder.status} - 等待價格達到 ${lowPrice} 觸發`);
