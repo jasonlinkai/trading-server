@@ -302,9 +302,12 @@ export abstract class TradingService {
           orderType,
           orderData.action.toLowerCase(),
           quantity,
-          orderData.limit_price
+          orderData.limit_price,
+          {
+            clOrdID: 'order-main-001',
+          }
         );
-        console.log(`[${this.exchangeType}][MAIN] 主訂單創建成功: ID=${order.id}, 狀態=${order.status} - 交易所已接受訂單`);
+        console.log(`[${this.exchangeType}][MAIN] 主訂單創建成功: ${JSON.stringify(order)}`);
 
         // 檢查實際執行的數量是否與請求的數量不同
         if (order.info && order.info.orderQty && Number(order.info.orderQty) !== quantity) {
@@ -369,19 +372,19 @@ export abstract class TradingService {
       try {
         takeProfitOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.MARKET_IF_TOUCHED : OrderType.STOP,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.LIMIT : OrderType.STOP,
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
-          undefined,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? hightPrice : undefined,
           {
             clOrdID: 'order-hp-001',
-            clOrdLinkID: 'order-lp-001',
-            stopPx: hightPrice,
+            clOrdLinkID: 'order-001',
+            stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : hightPrice,
             execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly' : 'ReduceOnly,LastPrice',
             contingencyType: 'OneCancelsTheOther',
           }
         );
-        console.log(`[${this.exchangeType}] 創建HP訂單成功: ID=${takeProfitOrder.id}, 狀態=${takeProfitOrder.status} - 等待價格達到 ${hightPrice} 觸發`);
+        console.log(`[${this.exchangeType}] 創建HP訂單成功: ${JSON.stringify(takeProfitOrder)}`);
         result.takeProfitOrder = takeProfitOrder;
       } catch (tpError: any) {
         console.error(`[${this.exchangeType}] 創建HP訂單失敗: ${tpError instanceof Error ? tpError.message : '未知錯誤'}`);
@@ -394,19 +397,19 @@ export abstract class TradingService {
       try {
         stopLossOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.STOP : OrderType.MARKET_IF_TOUCHED,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.STOP : OrderType.LIMIT,
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
-          undefined,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : lowPrice,
           {
             clOrdID: 'order-lp-001',
-            clOrdLinkID: 'order-hp-001',
-            stopPx: lowPrice,
+            clOrdLinkID: 'order-001',
+            stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? lowPrice : undefined,
             execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly,LastPrice' : 'ReduceOnly',
             contingencyType: 'OneCancelsTheOther',
           }
         );
-        console.log(`[${this.exchangeType}] 創建LP訂單成功: ID=${stopLossOrder.id}, 狀態=${stopLossOrder.status} - 等待價格達到 ${lowPrice} 觸發`);
+        console.log(`[${this.exchangeType}] 創建LP訂單成功: ${JSON.stringify(stopLossOrder)}`);
         result.stopLossOrder = stopLossOrder;
       } catch (slError: any) {
         console.error(`[${this.exchangeType}] 創建LP訂單失敗: ${slError instanceof Error ? slError.message : '未知錯誤'}`);
