@@ -1,9 +1,9 @@
 {
-  "exchange": "bitmex",
-  "interval": "1h",
+  "exchange": "BITMEX",
+  "interval": "5",
   "now": "2023-05-26T04:00:00Z",
   "action": "buy",
-  "symbol": "BTCUSDT",
+  "symbol": "BTCUSDT.P",
   "qty": "100",
   "price": "96178",
   "leverage": 1,

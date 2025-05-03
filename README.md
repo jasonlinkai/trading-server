@@ -52,20 +52,22 @@ npm run start
 請求體格式：
 ```json
 {
-  "exchange": "{{exchange}}",
-  "interval": "{{interval}}",
-  "now": "{{timenow}}",
-  "action": "{{strategy.order.action}}",
-  "symbol": "{{ticker}}",
+  "exchange": "{{exchange}}", // BINANCE | BITMEX ...
+  "interval": "{{interval}}", // 5
+  "now": "{{timenow}}", // 2025-05-03T12:39:49Z
+  "action": "{{strategy.order.action}}", // buy | sell
+  "symbol": "{{ticker}}", // ticker from tradingView
   "qty": "{{strategy.order.contracts}}",
   "price": "{{strategy.order.price}}",
+  "leverage": 1,
   "take_profit": {
-    "points": 900,
+    "points": 3000,
     "is_percentage": false
   },
   "stop_loss": {
-    "points": 300,
+    "points": 1000,
     "is_percentage": false
   }
 }
+
 ```

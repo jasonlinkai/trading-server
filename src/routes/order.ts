@@ -6,16 +6,16 @@ import { OrderRequest, OrderRequestData } from '../interfaces/order';
 import {
   IS_TESTNET,
 } from '../constants';
-import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS, SymbolType } from '../enums';
+import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS, ETickerToSymbol, SymbolType } from '../enums';
 
 /**
  * Data adapter: Convert string fields in OrderRequest to number types
-*/
+  */
 function adaptOrderRequest(orderData: OrderRequestData) {
   return {
     ...orderData,
     exchange: orderData.exchange.toLowerCase() as ExchangeType,
-    symbol: orderData.symbol as SymbolType,
+    symbol: ETickerToSymbol[orderData.symbol] as unknown as SymbolType,
     action: orderData.action.toLowerCase() as TRADE_ACTIONS,
     qty: parseFloat(orderData.qty),
     price: parseFloat(orderData.price),
