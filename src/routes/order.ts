@@ -19,7 +19,15 @@ function adaptOrderRequest(orderData: OrderRequestData) {
     action: orderData.action.toLowerCase() as TRADE_ACTIONS,
     qty: parseFloat(orderData.qty),
     price: parseFloat(orderData.price),
-    limit_price: orderData.limit_price ? parseFloat(orderData.limit_price) : undefined
+    limit_price: orderData.limit_price ? parseFloat(orderData.limit_price) : undefined,
+    take_profit: {
+      points: orderData.take_profit.points,
+      is_percentage: orderData.take_profit.is_percentage || false
+    },
+    stop_loss: {
+      points: orderData.stop_loss.points,
+      is_percentage: orderData.stop_loss.is_percentage || false
+    }
   };
 }
 
@@ -169,16 +177,16 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
       }
 
       // If no position exists, cancel any existing take-profit and stop-loss orders first
-      if (!position) {
-        console.log(`[訂單處理] 未檢測到持倉，正在關閉可能存在的止盈止損訂單...`);
-        try {
-          await tradingService.cancelAllOrders(orderData.symbol);
-          console.log(`[訂單處理] 已關閉交易對 ${orderData.symbol} 的所有訂單`);
-        } catch (error) {
-          console.error(`[訂單處理] 關閉訂單時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
-          // Continue despite errors in canceling orders
-        }
-      }
+      // if (!position) {
+      //   console.log(`[訂單處理] 未檢測到持倉，正在關閉可能存在的止盈止損訂單...`);
+      //   try {
+      //     await tradingService.cancelAllOrders(orderData.symbol);
+      //     console.log(`[訂單處理] 已關閉交易對 ${orderData.symbol} 的所有訂單`);
+      //   } catch (error) {
+      //     console.error(`[訂單處理] 關閉訂單時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
+      //     // Continue despite errors in canceling orders
+      //   }
+      // }
 
       console.log(`[持倉檢查] 未檢測到已有持倉，允許創建新訂單`);
       console.log(`\n[訂單處理] 開始處理訂單...`);
@@ -192,27 +200,12 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
       console.log(`操作：${orderData.action.toUpperCase()}`);
       console.log(`數量：${orderData.qty}`);
       console.log(`當前價格：${orderData.price}`);
+      console.log(`限價：${orderData.limit_price}`);
       console.log(`止盈設置：${orderData.take_profit.points} 點${orderData.take_profit.is_percentage ? ' (百分比)' : ''}`);
       console.log(`止損設置：${orderData.stop_loss.points} 點${orderData.stop_loss.is_percentage ? ' (百分比)' : ''}\n`);
 
       // Call trading service to create order (including main order, take-profit order, and stop-loss order)
-      const result = await tradingService.createOrder({
-        exchange: orderData.exchange,
-        interval: orderData.interval,
-        now: orderData.now,
-        action: orderData.action,
-        symbol: orderData.symbol,
-        qty: orderData.qty,
-        price: orderData.price,
-        take_profit: {
-          points: orderData.take_profit.points,
-          is_percentage: orderData.take_profit.is_percentage || false
-        },
-        stop_loss: {
-          points: orderData.stop_loss.points,
-          is_percentage: orderData.stop_loss.is_percentage || false
-        }
-      });
+      const result = await tradingService.createOrder(orderData);
 
       // Check order creation result, return error if failed
       if (!result.success) {

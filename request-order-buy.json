@@ -5,7 +5,7 @@
   "action": "buy",
   "symbol": "BTCUSD",
   "qty": "100",
-  "price": "96279",
+  "price": "95984",
   "take_profit": {
     "points": 3000,
     "is_percentage": false
