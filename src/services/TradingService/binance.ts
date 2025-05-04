@@ -2,10 +2,21 @@ import * as ccxt from 'ccxt';
 import { TradingService } from '.';
 import { ExchangeType, OrderType, TRADE_ACTIONS } from '../../enums';
 import { OrderRequest, OrderResult } from '../../interfaces/order';
+import axios, { AxiosError } from 'axios';
+import { Dictionary } from 'ccxt';
+import cryptoJs from 'crypto-js';
+import WebSocket from 'ws';
+
 export class BinanceService extends TradingService {
+  private ws: WebSocket | null = null;
+  private listenKey: string = '';
+  private fapiEndpoint: string = '';
+  private wsEndpoint: string = '';
   constructor(exchangeType: ExchangeType, apiKey: string, apiSecret: string, isTestnet: boolean = false) {
     super(exchangeType, apiKey, apiSecret, isTestnet);
-
+    this.init();
+  }
+  async init() {
     this.initSymbolMappingsForExchange();
 
     // binance是現貨市場, binanceusdm 是期貨合約市場
@@ -16,12 +27,64 @@ export class BinanceService extends TradingService {
     });
 
     if (this.isTestnet) {
-      console.log(`[${this.exchangeType}][subclass][INIT] 設置測試網模式 - 避免在生產環境意外下單`);
+      this.wsEndpoint = this.isTestnet ?  'wss://stream.binancefuture.com/ws' : 'wss://fstream.binance.com/ws';
+      console.log(`[${this.exchangeType}][INIT] 設置測試網模式 - 避免在生產環境意外下單`);
       this.exchange.setSandboxMode(true);
     }
 
-    this.fetchMarketData();
-    console.log(`[${this.exchangeType}][subclass][INIT] 服務初始化完成，交易所基礎 URL: ${JSON.stringify(this.exchange.urls)} - 已建立交易所連接`);
+    await this.fetchMarketData();
+    console.log(`[${this.exchangeType}][INIT] 服務初始化完成，交易所基礎 URL: ${JSON.stringify(this.exchange.urls)} - 已建立交易所連接`);
+
+    const api = this.exchange.urls?.api as Dictionary<string>;
+    this.fapiEndpoint = api.fapiPublic;
+
+    try {
+      const res = await axios.post(`${this.fapiEndpoint}/listenKey`,
+        {
+          signature: cryptoJs.HmacSHA256(`${Date.now()}`, this.apiSecret).toString(cryptoJs.enc.Hex)
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-MBX-APIKEY': this.apiKey
+          },
+          params: {
+            timestamp: Date.now(),
+          },
+        }
+      );
+      console.log(`[${this.exchangeType}][INIT] 獲取聽鍵成功: ${JSON.stringify(res.data)}`);
+      this.listenKey = res.data.listenKey;
+      this.ws = new WebSocket(`${this.wsEndpoint}/${this.listenKey}`);
+      this.ws.on('open', () => {
+        console.log(`[${this.exchangeType}][SOCKET] 連線成功`);
+      });
+      this.ws.on('message', (buffer) => {
+        const decoder = new TextDecoder('utf-8');
+        const jsonString = decoder.decode(buffer as Buffer);
+        const message = JSON.parse(jsonString);
+        console.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, JSON.stringify(message));
+        if (message.e === 'ORDER_TRADE_UPDATE') {
+          if ((message.o.c.startsWith('hp-order') || message.o.c.startsWith('lp-order'))) {
+            if (message.o.X === 'FILLED') {
+              this.cancelAllOrders(message.o.s);
+            }
+          }
+        }
+      });
+      this.ws.on('close', () => {
+        console.log(`[${this.exchangeType}][SOCKET] 斷線`);
+      });
+      this.ws.on('error', () => {
+        console.log(`[${this.exchangeType}][SOCKET] 錯誤`);
+      });
+    } catch (error: unknown) {
+      if (error instanceof AxiosError) {
+        console.error(`[${this.exchangeType}][ERROR] 獲取聽鍵失敗: ${JSON.stringify(error.response?.data)}`);
+      } else {
+        console.error(`[${this.exchangeType}][ERROR] 獲取聽鍵失敗: ${error}`);
+      }
+    }
   }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
