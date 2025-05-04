@@ -3,9 +3,6 @@ import { Router, Request, Response } from 'express';
 import { TradingServiceFactory } from '../factories/TradingServiceFactory';
 import { formatResponse } from '../utils/formatting';
 import { OrderRequest, OrderRequestData } from '../interfaces/order';
-import {
-  IS_TESTNET,
-} from '../constants';
 import { ExchangeType, HTTP_STATUS, ERROR_MESSAGES, TRADE_ACTIONS, ETickerToSymbol, SymbolType } from '../enums';
 
 /**
@@ -32,7 +29,7 @@ function adaptOrderRequest(orderData: OrderRequestData) {
   };
 }
 
-export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = '', apiSecret: string = '', isTestnet: boolean = false) => {
+export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = '', apiSecret: string = '', isTestnet: boolean = false, needClearOrder: boolean = false) => {
   // Create Express router
   const router = Router();
 
@@ -41,7 +38,7 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
     exchangeType,
     apiKey,
     apiSecret,
-    IS_TESTNET
+    isTestnet
   );
 
   // GET /api/[ExchangeType]/position - Get position information
@@ -178,16 +175,16 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
       }
 
       // If no position exists, cancel any existing take-profit and stop-loss orders first
-      // if (!position) {
-      //   console.log(`[訂單處理] 未檢測到持倉，正在關閉可能存在的止盈止損訂單...`);
-      //   try {
-      //     await tradingService.cancelAllOrders(orderData.symbol);
-      //     console.log(`[訂單處理] 已關閉交易對 ${orderData.symbol} 的所有訂單`);
-      //   } catch (error) {
-      //     console.error(`[訂單處理] 關閉訂單時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
-      //     // Continue despite errors in canceling orders
-      //   }
-      // }
+      if (needClearOrder && !position) {
+        console.log(`[訂單處理] 未檢測到持倉，正在關閉可能存在的hp、lp訂單...`);
+        try {
+          await tradingService.cancelAllOrders(orderData.symbol);
+          console.log(`[訂單處理] 已關閉交易對 ${orderData.symbol} 的所有訂單`);
+        } catch (error) {
+          console.error(`[訂單處理] 關閉訂單時發生錯誤: ${error instanceof Error ? error.message : '未知錯誤'}`);
+          // Continue despite errors in canceling orders
+        }
+      }
 
       console.log(`[持倉檢查] 未檢測到已有持倉，允許創建新訂單`);
       console.log(`\n[訂單處理] 開始處理訂單...`);
@@ -230,31 +227,33 @@ export const registerOrderRoute = (exchangeType: ExchangeType, apiKey: string = 
     }
   });
 
-  // function initScheduledTasks() {
-  //   console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
-  
-  //   // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
-  //   cron.schedule('4,9,14,19,24,29,34,39,44,49,54,59 * * * *', async () => {
-  //     const currentTime = new Date();
-  //     console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
-      
-  //     try {
-  //       // Check positions and clear orders
-  //       await tradingService.checkPositionsAndClearOrders(Object.values(SymbolType));
-        
-  //       console.log(`[排程] 定時任務執行完成 - ${new Date().toISOString()}`);
-  //     } catch (error) {
-  //       console.error('[排程][錯誤] 執行定時任務時發生錯誤:', error);
-  //     }
-  //   }, {
-  //     scheduled: true,
-  //     timezone: "Asia/Taipei" // Adjust timezone as needed
-  //   });
-  
-  //   console.log('[排程] 已成功設置排程任務');
-  // }
+  function initScheduledTasks() {
+    console.log('[排程] 初始化排程任務 - 設置自動檢查持倉和清理訂單的排程');
 
-  // initScheduledTasks();
+    // Schedule task to run at minute 4, 8, 12, 16, ... of each hour
+    cron.schedule('4,9,14,19,24,29,34,39,44,49,54,59 * * * *', async () => {
+      const currentTime = new Date();
+      console.log(`\n[排程] 執行定時任務 - ${currentTime.toISOString()} - 檢查持倉和清理訂單`);
+
+      try {
+        // Check positions and clear orders
+        await tradingService.checkPositionsAndClearOrders(Object.values(SymbolType));
+
+        console.log(`[排程] 定時任務執行完成 - ${new Date().toISOString()}`);
+      } catch (error) {
+        console.error('[排程][錯誤] 執行定時任務時發生錯誤:', error);
+      }
+    }, {
+      scheduled: true,
+      timezone: "Asia/Taipei" // Adjust timezone as needed
+    });
+
+    console.log('[排程] 已成功設置排程任務');
+  }
+
+  if (needClearOrder) {
+    initScheduledTasks();
+  }
 
   return router;
 }

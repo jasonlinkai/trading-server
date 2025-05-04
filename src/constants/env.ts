@@ -4,14 +4,15 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // 交易所 API 密鑰配置
-export const BITMEX_API_KEY = process.env.BITMEX_API_KEY || '';
-export const BITMEX_API_SECRET = process.env.BITMEX_API_SECRET || '';
-export const BINANCE_API_KEY = process.env.BINANCE_API_KEY || '';
-export const BINANCE_API_SECRET = process.env.BINANCE_API_SECRET || '';
+export const IS_TESTNET = process.env.IS_TESTNET === 'true';
+
+export const BITMEX_API_KEY = IS_TESTNET ? process.env.TEST_BITMEX_API_KEY || '' : process.env.BITMEX_API_KEY || '';
+export const BITMEX_API_SECRET = IS_TESTNET ? process.env.TEST_BITMEX_API_SECRET || '' : process.env.BITMEX_API_SECRET || '';
+export const BINANCE_API_KEY = IS_TESTNET ? process.env.TEST_BINANCE_API_KEY || '' : process.env.BINANCE_API_KEY || '';
+export const BINANCE_API_SECRET = IS_TESTNET ? process.env.TEST_BINANCE_API_SECRET || '' : process.env.BINANCE_API_SECRET || '';
 
 // 交易所配置
 export const EXCHANGE_TYPE = (process.env.EXCHANGE_TYPE || 'binance').toLowerCase();
-export const IS_TESTNET = process.env.IS_TESTNET === 'true';
 
 // 根據交易所類型選擇對應的 API 密鑰
 export const API_KEY = EXCHANGE_TYPE === 'bitmex' 
