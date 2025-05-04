@@ -9,7 +9,8 @@ import WebSocket from 'ws';
 
 export class BinanceService extends TradingService {
   private ws: WebSocket | null = null;
-  private listenKey: string = '';
+  private reconnectCount: number = 0;
+  private updateListenerKeyInterval: NodeJS.Timeout | null = null;
   private fapiEndpoint: string = '';
   private wsEndpoint: string = '';
   constructor(exchangeType: ExchangeType, apiKey: string, apiSecret: string, isTestnet: boolean = false) {
@@ -27,7 +28,7 @@ export class BinanceService extends TradingService {
     });
 
     if (this.isTestnet) {
-      this.wsEndpoint = this.isTestnet ?  'wss://stream.binancefuture.com/ws' : 'wss://fstream.binance.com/ws';
+      this.wsEndpoint = this.isTestnet ? 'wss://stream.binancefuture.com/ws' : 'wss://fstream.binance.com/ws';
       console.log(`[${this.exchangeType}][INIT] 設置測試網模式 - 避免在生產環境意外下單`);
       this.exchange.setSandboxMode(true);
     }
@@ -38,6 +39,48 @@ export class BinanceService extends TradingService {
     const api = this.exchange.urls?.api as Dictionary<string>;
     this.fapiEndpoint = api.fapiPublic;
 
+    await this.initWebSocket();
+  }
+  async initWebSocket() {
+    const listenKey = await this.getListenerKey();
+    this.ws = new WebSocket(`${this.wsEndpoint}/${listenKey}`);
+    this.ws.on('open', () => {
+      this.reconnectCount = 0;
+      console.log(`[${this.exchangeType}][SOCKET] 連線成功`);
+      this.updateListenerKeyInterval = setInterval(async () => {
+        await this.updateListenerKey();
+      }, 1000 * 60 * 55);
+    });
+    this.ws.on('message', (buffer) => {
+      const decoder = new TextDecoder('utf-8');
+      const jsonString = decoder.decode(buffer as Buffer);
+      const message = JSON.parse(jsonString);
+      console.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, JSON.stringify(message));
+      if (message.e === 'ORDER_TRADE_UPDATE') {
+        if ((message.o.c.startsWith('hp-order') || message.o.c.startsWith('lp-order'))) {
+          if (message.o.X === 'FILLED') {
+            this.cancelAllOrders(message.o.s);
+          }
+        }
+      }
+    });
+    this.ws.on('error', (error) => {
+      console.log(`[${this.exchangeType}][SOCKET] 錯誤: ${error.message}`);
+    });
+    this.ws.on('close', async () => {
+      console.log(`[${this.exchangeType}][SOCKET] 斷線`);
+      if (this.reconnectCount < 3) {
+        console.log(`[${this.exchangeType}][SOCKET] 嘗試重連第${this.reconnectCount + 1}次`);
+        this.initWebSocket();
+        this.reconnectCount++;
+      } else {
+        console.error(`[${this.exchangeType}][SOCKET] 斷線次數過多，不再嘗試重連, 關閉程序`);
+        await this.closeAllPositions();
+        process.exit(1);
+      }
+    });
+  }
+  async getListenerKey() {
     try {
       const res = await axios.post(`${this.fapiEndpoint}/listenKey`,
         {
@@ -54,36 +97,33 @@ export class BinanceService extends TradingService {
         }
       );
       console.log(`[${this.exchangeType}][INIT] 獲取聽鍵成功: ${JSON.stringify(res.data)}`);
-      this.listenKey = res.data.listenKey;
-      this.ws = new WebSocket(`${this.wsEndpoint}/${this.listenKey}`);
-      this.ws.on('open', () => {
-        console.log(`[${this.exchangeType}][SOCKET] 連線成功`);
-      });
-      this.ws.on('message', (buffer) => {
-        const decoder = new TextDecoder('utf-8');
-        const jsonString = decoder.decode(buffer as Buffer);
-        const message = JSON.parse(jsonString);
-        console.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, JSON.stringify(message));
-        if (message.e === 'ORDER_TRADE_UPDATE') {
-          if ((message.o.c.startsWith('hp-order') || message.o.c.startsWith('lp-order'))) {
-            if (message.o.X === 'FILLED') {
-              this.cancelAllOrders(message.o.s);
-            }
-          }
-        }
-      });
-      this.ws.on('close', () => {
-        console.log(`[${this.exchangeType}][SOCKET] 斷線`);
-      });
-      this.ws.on('error', () => {
-        console.log(`[${this.exchangeType}][SOCKET] 錯誤`);
-      });
+      return res.data.listenKey;
     } catch (error: unknown) {
-      if (error instanceof AxiosError) {
-        console.error(`[${this.exchangeType}][ERROR] 獲取聽鍵失敗: ${JSON.stringify(error.response?.data)}`);
-      } else {
-        console.error(`[${this.exchangeType}][ERROR] 獲取聽鍵失敗: ${error}`);
-      }
+      console.error(`[${this.exchangeType}][ERROR] 獲取聽鍵失敗: ${error}`);
+      throw error;
+    }
+  }
+  async updateListenerKey() {
+    try {
+      const res = await axios.put(`${this.fapiEndpoint}/listenKey`,
+        {
+          signature: cryptoJs.HmacSHA256(`${Date.now()}`, this.apiSecret).toString(cryptoJs.enc.Hex)
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-MBX-APIKEY': this.apiKey
+          },
+          params: {
+            timestamp: Date.now(),
+          },
+        }
+      );
+      console.log(`[${this.exchangeType}][INIT] 更新聽鍵成功: ${JSON.stringify(res.data)}`);
+      return res.data.listenKey;
+    } catch (error: unknown) {
+      console.error(`[${this.exchangeType}][ERROR] 更新聽鍵失敗: ${error}`);
+      throw error;
     }
   }
   initSymbolMappingsForExchange() {

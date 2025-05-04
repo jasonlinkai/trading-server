@@ -314,4 +314,20 @@ export abstract class TradingService {
     
     console.log(`[排程][${this.exchangeType}] 檢查持倉和清理訂單完成`);
   } 
-} 
+
+  async closeAllPositions() {
+    console.log(`[${this.exchangeType}][POSITION] 開始關閉所有持倉`);
+    try {
+      if (!this.exchange) {
+        console.error(`[${this.exchangeType}][ERROR] 交易所實例未初始化，無法關閉所有持倉 - 可能是配置問題或初始化失敗`);
+        throw new Error('Exchange not initialized');
+      }
+      await this.exchange.closeAllPositions();
+      console.log(`[${this.exchangeType}][POSITION] 成功關閉所有持倉`);
+      return true;
+    } catch (error) {
+      console.error(`[${this.exchangeType}][ERROR] 關閉所有持倉時發生錯誤 - 系統錯誤或參數無效`);
+      return false
+    }
+  }
+}
