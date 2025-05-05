@@ -29,8 +29,9 @@ export class BinanceService extends TradingService {
       enableRateLimit: true,
     });
 
+    this.wsEndpoint = this.isTestnet ? 'wss://stream.binancefuture.com/ws' : 'wss://fstream.binance.com/ws';
+
     if (this.isTestnet) {
-      this.wsEndpoint = this.isTestnet ? 'wss://stream.binancefuture.com/ws' : 'wss://fstream.binance.com/ws';
       logger.info(`[${this.exchangeType}][INIT] 設置測試網模式 - 避免在生產環境意外下單`);
       this.exchange.setSandboxMode(true);
     }
