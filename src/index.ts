@@ -104,19 +104,19 @@ app.get(API_PATHS.FORMAT, (req, res) => {
         method: 'GET',
         description: '獲取 [exchange] 持倉信息',
         parameters: {
-          symbol: 'string (必填，交易對，例如 "BTCUSD")'
+          symbol: 'string (必填，交易對，例如 "BTCUSDT")'
         },
-        example: '/api/[exchange]/position?symbol=BTCUSD'
+        example: '/api/[exchange]/position?symbol=BTCUSDT'
       },
       '/api/[exchange]/position/close': {
         method: 'POST',
         contentType: 'application/json',
         description: '關閉 [exchange] 指定交易對的持倉',
         requestFormat: {
-          symbol: 'string (必填，交易對，例如 "BTCUSD")'
+          symbol: 'string (必填，交易對，例如 "BTCUSDT")'
         },
         example: {
-          symbol: 'BTCUSD'
+          symbol: 'BTCUSDT'
         }
       }
     }

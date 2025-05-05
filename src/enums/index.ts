@@ -1,15 +1,12 @@
 export enum TickerType {
-  'BTCUSD.P' = 'BTCUSD.P',
   'BTCUSDT.P' = 'BTCUSDT.P'
 }
 
 export enum SymbolType {
-  'BTCUSD' = 'BTCUSD',
   'BTCUSDT' = 'BTCUSDT'
 }
 
 export enum ETickerToSymbol {
-  'BTCUSD.P' = 'BTCUSD',
   'BTCUSDT.P' = 'BTCUSDT'
 }
 

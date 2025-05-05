@@ -25,7 +25,6 @@ export class BitMEXService extends TradingService {
   }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
-      'BTCUSD': 'XBTUSD',
       'BTCUSDT': 'XBTUSDT'
     };
   }

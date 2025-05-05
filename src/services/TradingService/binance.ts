@@ -1,11 +1,12 @@
 import * as ccxt from 'ccxt';
 import { TradingService } from '.';
-import { ExchangeType, OrderType, TRADE_ACTIONS } from '../../enums';
+import { ETickerToSymbol, ExchangeType, OrderType, TRADE_ACTIONS } from '../../enums';
 import { OrderRequest, OrderResult } from '../../interfaces/order';
 import axios, { AxiosError } from 'axios';
 import { Dictionary } from 'ccxt';
 import cryptoJs from 'crypto-js';
 import WebSocket from 'ws';
+import qs from 'qs';
 import logger from '../../utils/logger';
 
 export class BinanceService extends TradingService {
@@ -40,6 +41,11 @@ export class BinanceService extends TradingService {
     const api = this.exchange.urls?.api as Dictionary<string>;
     this.fapiEndpoint = api.fapiPublic;
 
+    await this.setIsMultiAssetsMargin(false);
+    const symbols = Object.values(ETickerToSymbol);
+    for (let i = 0; i < symbols.length; i++) {
+      await this.setMarginType(symbols[i], 'ISOLATED');
+    }
     await this.initWebSocket();
   }
   async initWebSocket() {
@@ -56,7 +62,7 @@ export class BinanceService extends TradingService {
       const decoder = new TextDecoder('utf-8');
       const jsonString = decoder.decode(buffer as Buffer);
       const message = JSON.parse(jsonString);
-      logger.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, JSON.stringify(message));
+      logger.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, message);
       if (message.e === 'ORDER_TRADE_UPDATE') {
         if ((message.o.c.startsWith('hp-order') || message.o.c.startsWith('lp-order'))) {
           if (message.o.X === 'FILLED') {
@@ -127,9 +133,76 @@ export class BinanceService extends TradingService {
       throw error;
     }
   }
+  async setIsMultiAssetsMargin(isMultiAssetsMargin: boolean) {
+    try {
+      logger.info(`[${this.exchangeType}][MARGIN_TYPE] 開始更新聯合保證金模式: ${isMultiAssetsMargin ? 'true' : 'false'}`);
+      const originalParams = {
+        multiAssetsMargin: isMultiAssetsMargin ? 'true' : 'false',
+        timestamp: Date.now(),
+      };
+      const queryString = qs.stringify(originalParams);
+      const signature = cryptoJs.HmacSHA256(queryString, this.apiSecret).toString(cryptoJs.enc.Hex);
+      await axios.post(`${this.fapiEndpoint}/multiAssetsMargin`,
+        `${queryString}&signature=${signature}`,
+        {
+          headers: {
+            'X-MBX-APIKEY': this.apiKey
+          },
+        }
+      );
+      logger.info(`[${this.exchangeType}][MARGIN_TYPE] 更新聯合保證金模式為: ${isMultiAssetsMargin ? 'true' : 'false'}`);
+      return true;
+    } catch (error: any) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data.code === -4171) {
+          logger.warn(`[${this.exchangeType}][WARN] 聯合保證金模式已經設置為: ${isMultiAssetsMargin ? 'true' : 'false'}`);
+          return true;
+        }
+        logger.error(`[${this.exchangeType}][ERROR] 更新聯合保證金模式時發生錯誤`);
+        logger.error(`[${this.exchangeType}][ERROR] API返回值: ${JSON.stringify(error.response?.data)}`);
+        logger.error(`[${this.exchangeType}][ERROR] API請求參數: ${JSON.stringify(error.config)}`);
+      } else {
+        logger.error(`[${this.exchangeType}][ERROR]更新聯合保證金模式時發生錯誤: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+  async setMarginType(symbol: string, marginType: 'ISOLATED' | 'CROSSED') {
+    logger.info(`[${this.exchangeType}][MARGIN_TYPE] 開始設置保證金模式: ${symbol} - ${marginType}`);
+    try {
+      const originalParams = {
+        symbol,
+        marginType,
+        timestamp: Date.now(),
+      };
+      const queryString = qs.stringify(originalParams);
+      const signature = cryptoJs.HmacSHA256(queryString, this.apiSecret).toString(cryptoJs.enc.Hex);
+      await axios.post(`${this.fapiEndpoint}/marginType`,
+        `${queryString}&signature=${signature}`,
+        {
+          headers: {
+            'X-MBX-APIKEY': this.apiKey
+          },
+        }
+      );
+      return true;
+    } catch (error: any) {
+      if (error instanceof AxiosError) {
+        if (error.response?.data.code === -4046) {
+          logger.warn(`[${this.exchangeType}][WARN] 保證金模式已經設置為: ${marginType}`);
+          return true;
+        }
+        logger.error(`[${this.exchangeType}][ERROR] 更新保證金模式時發生錯誤`);
+        logger.error(`[${this.exchangeType}][ERROR] API返回值: ${JSON.stringify(error.response?.data)}`);
+        logger.error(`[${this.exchangeType}][ERROR] API請求參數: ${JSON.stringify(error.config)}`);
+      } else {
+        logger.error(`[${this.exchangeType}][ERROR]更新聯合保證金模式時發生錯誤: ${error.message}`);
+      }
+      throw error;
+    }
+  }
   initSymbolMappingsForExchange() {
     this.symbolMappingsForExchange = {
-      'BTCUSD': 'BTC/USD',
       'BTCUSDT': 'BTC/USDT'
     };
   }
