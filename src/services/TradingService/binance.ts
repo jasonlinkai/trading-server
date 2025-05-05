@@ -296,7 +296,7 @@ export class BinanceService extends TradingService {
       };
 
       // 使用訂單價格計算止盈止損
-      const entryPrice = orderData.price;
+      const entryPrice = result.order.price;
       logger.info(`[${this.exchangeType}] 使用入場價格: ${entryPrice} 計算HP、LP`);
 
       // 計算止盈價格
@@ -327,6 +327,7 @@ export class BinanceService extends TradingService {
       logger.info(`[${this.exchangeType}] 創建HP訂單: ${executedQuantity} ${exchangeSymbol} @ ${hightPrice}`);
 
       let takeProfitOrder;
+      let tpError = false;
       try {
         takeProfitOrder = await this.exchange.createOrder(
           exchangeSymbol,
@@ -347,12 +348,24 @@ export class BinanceService extends TradingService {
         result.takeProfitOrder = takeProfitOrder;
       } catch (tpError: any) {
         logger.error(`[${this.exchangeType}] 創建HP訂單失敗: ${tpError instanceof Error ? tpError.message : '未知錯誤'}`);
+        tpError = true;
+      }
+
+      if (tpError) {
+        logger.error(`[${this.exchangeType}] 創建HP訂單失敗，開始關閉所有持倉`);
+        const result = await this.closeAllPositions();
+        return {
+          success: false,
+          error: `HP訂單創建失敗，${result ? '已關閉所有持倉' : '關閉所有持倉失敗'}`,
+          errorDetails: tpError
+        };
       }
 
       // 創建止損訂單
       logger.info(`[${this.exchangeType}] 創建LP訂單: ${executedQuantity} ${exchangeSymbol} @ ${lowPrice}`);
 
       let stopLossOrder;
+      let slError = false;
       try {
         stopLossOrder = await this.exchange.createOrder(
           exchangeSymbol,
@@ -373,13 +386,24 @@ export class BinanceService extends TradingService {
         result.stopLossOrder = stopLossOrder;
       } catch (slError: any) {
         logger.error(`[${this.exchangeType}] 創建LP訂單失敗: ${slError instanceof Error ? slError.message : '未知錯誤'}`);
+        slError = true;
+      }
+
+      if (slError) {
+        logger.error(`[${this.exchangeType}] 創建LP訂單失敗，開始關閉所有持倉`);
+        const result = await this.closeAllPositions();
+        return {
+          success: false,
+          error: `LP訂單創建失敗，${result ? '已關閉所有持倉' : '關閉所有持倉失敗'}`,
+          errorDetails: slError
+        };
       }
 
       // 總結訂單處理狀態
       logger.info(`[${this.exchangeType}][SUCCESS] 訂單處理完成:
-        - 主訂單: ${result.order ? '成功' : '失敗'}
-        - HP訂單: ${result.takeProfitOrder ? '成功' : '失敗或未創建'}
-        - LP訂單: ${result.stopLossOrder ? '成功' : '失敗或未創建'}`);
+        - 主訂單: ${result.order}
+        - HP訂單: ${result.takeProfitOrder}
+        - LP訂單: ${result.stopLossOrder}`);
       logger.info(`========== [${this.exchangeType}][ORDER] 訂單處理完成 ==========\n`);
 
       return result;
