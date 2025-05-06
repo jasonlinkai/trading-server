@@ -63,7 +63,7 @@ export class BinanceService extends TradingService {
       const decoder = new TextDecoder('utf-8');
       const jsonString = decoder.decode(buffer as Buffer);
       const message = JSON.parse(jsonString);
-      logger.info(`[${this.exchangeType}][SOCKET] 收到訊息:`, message);
+      logger.info(`[${this.exchangeType}][SOCKET] 收到訊息: ${JSON.stringify(message)}`);
       if (message.e === 'ORDER_TRADE_UPDATE') {
         if ((message.o.c.startsWith('hp-order') || message.o.c.startsWith('lp-order'))) {
           if (message.o.X === 'FILLED') {
@@ -331,17 +331,15 @@ export class BinanceService extends TradingService {
       try {
         takeProfitOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.LIMIT : OrderType.STOP,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'TAKE_PROFIT' : 'STOP_MARKET',
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           hightPrice,
           {
             newClientOrderId: `hp-${orderUUID}`,
-            clOrdLinkID: `cl-${orderUUID}`,
-            triggerPrice: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : hightPrice,
-            stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : hightPrice,
-            execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly' : 'ReduceOnly,LastPrice',
-            contingencyType: 'OneCancelsTheOther',
+            triggerPrice: hightPrice,
+            reduceOnly: true,
+            priceProtect: true,
           }
         );
         logger.info(`[${this.exchangeType}] 創建HP訂單成功: ${JSON.stringify(takeProfitOrder)}`);
@@ -369,17 +367,15 @@ export class BinanceService extends TradingService {
       try {
         stopLossOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? OrderType.STOP : OrderType.LIMIT,
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'STOP_MARKET' : 'TAKE_PROFIT',
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           lowPrice,
           {
             newClientOrderId: `lp-${orderUUID}`,
-            clOrdLinkID: `cl-${orderUUID}`,
-            triggerPrice: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? lowPrice : undefined,
-            stopPx: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? lowPrice : undefined,
-            execInst: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'ReduceOnly,LastPrice' : 'ReduceOnly',
-            contingencyType: 'OneCancelsTheOther',
+            reduceOnly: true,
+            triggerPrice: lowPrice,
+            priceProtect: true,
           }
         );
         logger.info(`[${this.exchangeType}] 創建LP訂單成功: ${JSON.stringify(stopLossOrder)}`);
@@ -401,9 +397,9 @@ export class BinanceService extends TradingService {
 
       // 總結訂單處理狀態
       logger.info(`[${this.exchangeType}][SUCCESS] 訂單處理完成:
-        - 主訂單: ${result.order}
-        - HP訂單: ${result.takeProfitOrder}
-        - LP訂單: ${result.stopLossOrder}`);
+        - 主訂單: ${JSON.stringify(result.order)}
+        - HP訂單: ${JSON.stringify(result.takeProfitOrder)}
+        - LP訂單: ${JSON.stringify(result.stopLossOrder)}`);
       logger.info(`========== [${this.exchangeType}][ORDER] 訂單處理完成 ==========\n`);
 
       return result;
