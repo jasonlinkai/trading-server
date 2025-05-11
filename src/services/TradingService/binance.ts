@@ -296,7 +296,7 @@ export class BinanceService extends TradingService {
       };
 
       // 使用訂單價格計算止盈止損
-      const entryPrice = result.order.price;
+      const entryPrice = orderData.price;
       logger.info(`[${this.exchangeType}] 使用入場價格: ${entryPrice} 計算HP、LP`);
 
       // 計算止盈價格
