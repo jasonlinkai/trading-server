@@ -4,9 +4,9 @@
   "now": "2023-05-26T04:00:00Z",
   "action": "buy",
   "symbol": "BTCUSDT.P",
-  "qty": "0.005",
-  "price": "103812",
-  "leverage": 1,
+  "qty": "0.012",
+  "price": "103827",
+  "leverage": 3,
   "take_profit": {
     "points": 0.5,
     "is_percentage": true

@@ -331,13 +331,13 @@ export class BinanceService extends TradingService {
       try {
         takeProfitOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'TAKE_PROFIT' : 'STOP_MARKET',
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'LIMIT' : 'STOP_MARKET',
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           hightPrice,
           {
             newClientOrderId: `hp-${orderUUID}`,
-            triggerPrice: hightPrice,
+            triggerPrice: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? undefined : hightPrice,
             reduceOnly: true,
             priceProtect: true,
           }
@@ -367,14 +367,14 @@ export class BinanceService extends TradingService {
       try {
         stopLossOrder = await this.exchange.createOrder(
           exchangeSymbol,
-          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'STOP_MARKET' : 'TAKE_PROFIT',
+          orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? 'STOP_MARKET' : 'LIMIT',
           orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? TRADE_ACTIONS.SELL : TRADE_ACTIONS.BUY,
           executedQuantity,
           lowPrice,
           {
             newClientOrderId: `lp-${orderUUID}`,
             reduceOnly: true,
-            triggerPrice: lowPrice,
+            triggerPrice: orderData.action.toLowerCase() === TRADE_ACTIONS.BUY ? lowPrice : undefined,
             priceProtect: true,
           }
         );
